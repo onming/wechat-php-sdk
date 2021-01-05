@@ -104,7 +104,7 @@ class Jssdk
         // 为保证第三方服务器与微信服务器之间数据传输的安全性，所有微信接口采用https方式调用，必须使用下面2行代码打开ssl安全校验。
         // 如果在部署过程中代码在此处验证失败，请到 http://curl.haxx.se/ca/cacert.pem 下载新的证书判别文件。
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
         curl_setopt($curl, CURLOPT_URL, $url);
 
         $res = curl_exec($curl);
@@ -116,7 +116,11 @@ class Jssdk
     private function get_php_file($filename)
     {
         if ($this->framework == 'thinkphp') {
-            return cache($filename);
+            $data = cache($filename);
+            if(!$data){
+                return json_encode(["access_token" => "", "jsapi_ticket" => "", "expire_time" => 0]);
+            }
+            return $data;
         } else {
             return trim(substr(file_get_contents(dirname(__FILE__).'../temp/'.$filename), 15));
         }
@@ -125,7 +129,7 @@ class Jssdk
     private function set_php_file($filename, $content)
     {
         if ($this->framework == 'thinkphp') {
-            return cache($filename, $content, 3600);
+            return cache($filename, $content, 86400);
         } else {
             $fp = fopen(dirname(__FILE__).'../temp/'.$filename, "w");
             fwrite($fp, "<?php exit();?>" . $content);
