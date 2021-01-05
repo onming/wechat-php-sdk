@@ -116,18 +116,18 @@ class Jssdk
     private function get_php_file($filename)
     {
         if ($this->framework == 'thinkphp') {
-
+            return cache($filename);
         } else {
-            return trim(substr(file_get_contents($filename), 15));
+            return trim(substr(file_get_contents(dirname(__FILE__).'../temp/'.$filename), 15));
         }
     }
 
     private function set_php_file($filename, $content)
     {
         if ($this->framework == 'thinkphp') {
-
+            return cache($filename, $content, 3600);
         } else {
-            $fp = fopen($filename, "w");
+            $fp = fopen(dirname(__FILE__).'../temp/'.$filename, "w");
             fwrite($fp, "<?php exit();?>" . $content);
             fclose($fp);
         }
