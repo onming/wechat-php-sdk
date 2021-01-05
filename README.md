@@ -18,6 +18,6 @@ composer require onming/wechat-php-sdk ~1.0
 ```
 use Onming\WechatPhpSdk\Jssdk;
 $jssdk = new Jssdk(app_id, app_secret, 'thinkphp'); // 第三参数如果为thinkphp则采用tp自带缓存，默认空使用文件缓存需设置temp目录读写权限
-$signPackage = $jssdk->GetSignPackage();
+$signPackage = $jssdk->GetSignPackage($url); // url参数可以动态传递否则默认取当前访问链接
 var_dump($signPackage);
 ```
