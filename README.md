@@ -11,5 +11,13 @@
 ## 安装方式 
 ### Composer 方式
 ```
-composer require onming/wechat-php-sdk @dev
+composer require onming/wechat-php-sdk ~1.0
+```
+
+### 使用方法
+```
+use Onming\WechatPhpSdk\Jssdk;
+$jssdk = new Jssdk(app_id, app_secret, 'thinkphp'); // 第三参数如果为thinkphp则采用tp自带缓存，默认空使用文件缓存需设置temp目录读写权限
+$signPackage = $jssdk->GetSignPackage();
+var_dump($signPackage);
 ```
