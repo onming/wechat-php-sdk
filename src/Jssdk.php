@@ -15,6 +15,12 @@ class Jssdk
         $this->framework = $framework;
     }
 
+    /**
+     * 获取分享signature
+     * 
+     * @param $url 分享链接地址
+     * @return array
+     */
     public function getSignPackage($url = '')
     {
         $jsapiTicket = $this->getJsApiTicket();
@@ -40,6 +46,19 @@ class Jssdk
             "rawString" => $string
         );
         return $signPackage;
+    }
+
+    /**
+     * 发送模板消息
+     * 
+     * @param $content
+     * @return array
+     */
+    public function sendTemplate($data)
+    {
+        $accessToken = $this->getAccessToken();
+        $url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=$accessToken";
+        return json_decode($this->httpPost($url, $data));
     }
 
     private function createNonceStr($length = 16)
@@ -75,7 +94,7 @@ class Jssdk
         return $ticket;
     }
 
-    private function getAccessToken()
+    public function getAccessToken()
     {
         // access_token 应该全局存储与更新，以下代码以写入到文件中做示例
         $data = json_decode($this->get_php_file("access_token.php"));
@@ -113,27 +132,63 @@ class Jssdk
         return $res;
     }
 
+    private function httpPost($url, $data)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 500);
+        // 为保证第三方服务器与微信服务器之间数据传输的安全性，所有微信接口采用https方式调用，必须使用下面2行代码打开ssl安全校验。
+        // 如果在部署过程中代码在此处验证失败，请到 http://curl.haxx.se/ca/cacert.pem 下载新的证书判别文件。
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        // POST数据
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+        $res = curl_exec($curl);
+        curl_close($curl);
+
+        return $res;
+    }
+
     private function get_php_file($filename)
     {
-        if ($this->framework == 'thinkphp') {
-            $data = cache($filename);
-            if(!$data){
-                return json_encode(["access_token" => "", "jsapi_ticket" => "", "expire_time" => 0]);
-            }
+        switch ($this->framework) {
+            case 'thinkphp':
+                $data = cache($filename);
+                break;
+            case 'laravel':
+                $data = cache()->get($filename);
+                break;
+            
+            default:
+                $data = trim(substr(file_get_contents(dirname(__FILE__).'../temp/'.$filename), 15));
+                break;
+        }
+        if(!$data){
+            return json_encode(["access_token" => "", "jsapi_ticket" => "", "expire_time" => 0]);
+        }else{
             return $data;
-        } else {
-            return trim(substr(file_get_contents(dirname(__FILE__).'../temp/'.$filename), 15));
         }
     }
 
     private function set_php_file($filename, $content)
     {
-        if ($this->framework == 'thinkphp') {
-            return cache($filename, $content, 86400);
-        } else {
-            $fp = fopen(dirname(__FILE__).'../temp/'.$filename, "w");
-            fwrite($fp, "<?php exit();?>" . $content);
-            fclose($fp);
+        switch ($this->framework) {
+            case 'thinkphp':
+                return cache($filename, $content, 7200);
+                break;
+            case 'laravel':
+                return cache()->put($filename, $content, 120);
+                break;
+            
+            default:
+                $fp = fopen(dirname(__FILE__).'../temp/'.$filename, "w");
+                fwrite($fp, "<?php exit();?>" . $content);
+                fclose($fp);
+                break;
         }
     }
 }

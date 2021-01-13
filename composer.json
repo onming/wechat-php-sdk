@@ -1,7 +1,7 @@
 {
     "name": "onming/wechat-php-sdk",
     "description": "微信php-sdk",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "keywords": [
         "php", "wechat", "wechat-php-sdk"
     ],
